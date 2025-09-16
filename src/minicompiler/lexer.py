@@ -131,20 +131,10 @@ class Lexer:
                 buf.append(self.r.advance())
 
             text = "".join(buf)
+         if text in KEYWORDS:
+            return Token(KEYWORDS[text], text, line, col)
+        return Token(TokenType.IDENTIFIER, text, line, col)
 
-            match text:
-                case "if":
-                    return Token(TokenType.IF, text, line, col)
-                case "else":
-                    return Token(TokenType.ELSE, text, line, col)
-                case "int":
-                    return Token(TokenType.INT, text, line, col)
-                case "float":
-                    return Token(TokenType.FLOAT, text, line, col)
-                case "print":
-                    return Token(TokenType.PRINT, text, line, col)
-                case _:  
-                    return Token(TokenType.IDENTIFIER, text, line, col)
 
     def _is_identifier_start(self, c: str) -> bool:
         return ("a" <= c <= "z") or ("A" <= c <= "Z") or c == "_"
