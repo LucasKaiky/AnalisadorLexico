@@ -126,12 +126,12 @@ class Lexer:
             break
 
     def _scan_identifier(self, first: str, line: int, col: int) -> Token:
-            buf = [first]
-            while self._is_identifier_part(self.r.peek()):
-                buf.append(self.r.advance())
+        buf = [first]
+        while self._is_identifier_part(self.r.peek()):
+            buf.append(self.r.advance())
 
-            text = "".join(buf)
-         if text in KEYWORDS:
+        text = "".join(buf)
+        if text in KEYWORDS:
             return Token(KEYWORDS[text], text, line, col)
         return Token(TokenType.IDENTIFIER, text, line, col)
 
