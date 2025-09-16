@@ -88,7 +88,7 @@ class Lexer:
             return self.next_token()
         if c == '/':
             if self.r.match('*'):
-                self._skip_block_comment(line, col)
+                self._skip_block_comment(self)
                 return self.next_token()
             return Token(TokenType.SLASH, "/", line, col)
         if self._is_identifier_start(c):
