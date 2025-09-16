@@ -1,7 +1,9 @@
+from .tokens import TokenType
+
 KEYWORDS = {
-    "int": "INT",
-    "float": "FLOAT",
-    "print": "PRINT",
-    "if": "IF",
-    "else": "ELSE",
+    "int": "TokenType.INT",
+    "float": "TokenType.FLOAT",
+    "print": "TokenType.PRINT",
+    "if": "TokenType.IF",
+    "else": "TokenType.ELSE",
 }
