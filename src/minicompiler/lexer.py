@@ -64,6 +64,7 @@ class Lexer:
             "+": TokenType.PLUS,
             "-": TokenType.MINUS,
             "*": TokenType.STAR,
+            "/": TokenType.SLASH,
             "(": TokenType.LPAREN,
             ")": TokenType.RPAREN,
         }
