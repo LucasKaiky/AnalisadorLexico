@@ -1,5 +1,6 @@
 from .tokens import TokenType, Token
 from .errors import LexicalError
+from .keywords import KEYWORDS
 
 class Reader:
     def __init__(self, text: str):
@@ -63,7 +64,6 @@ class Lexer:
             "+": TokenType.PLUS,
             "-": TokenType.MINUS,
             "*": TokenType.STAR,
-            "/": TokenType.SLASH,
             "(": TokenType.LPAREN,
             ")": TokenType.RPAREN,
         }
@@ -84,8 +84,18 @@ class Lexer:
         c = self.r.advance()
         if self._is_identifier_start(c):
             return self._scan_identifier(c, line, col)
+        if c.isdigit() or (c == "." and self.r.peek().isdigit()):
+            return self._scan_number(c, line, col)
         if c in self.single_char:
+            if c == "*" and self.r.peek() == "/":
+                return Token(self.single_char[c], c, line, col)
             return Token(self.single_char[c], c, line, col)
+        if c == "/":
+            if self.r.peek() == "*":
+                self.r.advance()
+                self._skip_block_comment()
+                return self.next_token()
+            return Token(TokenType.SLASH, "/", line, col)
         if c == "=":
             if self.r.match("="):
                 return Token(TokenType.EQUAL_EQUAL, "==", line, col)
@@ -102,8 +112,9 @@ class Lexer:
             if self.r.match("="):
                 return Token(TokenType.LESS_EQUAL, "<=", line, col)
             return Token(TokenType.LESS, "<", line, col)
-        if c.isdigit() or c == ".":
-            raise LexicalError("numeric literal not supported yet", line, col)
+        if c == "#":
+            self._skip_line_comment()
+            return self.next_token()
         raise LexicalError(f"invalid character '{c}'", line, col)
 
     def _skip_whitespace(self):
@@ -119,8 +130,10 @@ class Lexer:
     def _scan_identifier(self, first: str, line: int, col: int) -> Token:
         buf = [first]
         while self._is_identifier_part(self.r.peek()):
-            buf.append(self.r.advance())
-        return Token(TokenType.IDENTIFIER, "".join(buf), line, col)
+            text = "".join(buf)
+            if text in KEYWORDS:
+                return Token(KEYWORDS[text], text, line, col)
+            return Token(TokenType.IDENTIFIER, text, line, col)
 
     def _is_identifier_start(self, c: str) -> bool:
         return ("a" <= c <= "z") or ("A" <= c <= "Z") or c == "_"
@@ -129,10 +142,33 @@ class Lexer:
         return ("a" <= c <= "z") or ("A" <= c <= "Z") or c == "_" or c.isdigit()
 
     def _scan_number(self, first: str, line: int, col: int) -> Token:
-        raise LexicalError("numeric literal not supported yet", line, col)
+        buf = [first]
+        has_dot = first == "."
+        while True:
+            c = self.r.peek()
+            if c.isdigit():
+                buf.append(self.r.advance())
+            elif c == ".":
+                if has_dot:
+                    break
+                has_dot = True
+                buf.append(self.r.advance())
+            else:
+                break
+        text = "".join(buf)
+        if text.endswith(".") or text == ".":
+            raise LexicalError(f"invalid numeric literal '{text}'", line, col)
+        return Token(TokenType.NUMBER, text, line, col)
 
     def _skip_line_comment(self):
-        pass
+        while not self.r.is_at_end() and self.r.peek() not in "\n\r":
+            self.r.advance()
 
     def _skip_block_comment(self):
-        pass
+        while not self.r.is_at_end():
+            if self.r.peek() == "*" and self.r.peek_next() == "/":
+                self.r.advance()
+                self.r.advance()
+                return
+            self.r.consume_newline() or self.r.advance()
+        raise LexicalError("Unterminated block comment", self.r.line, self.r.col)
