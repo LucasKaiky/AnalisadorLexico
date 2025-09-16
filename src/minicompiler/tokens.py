@@ -18,6 +18,11 @@ class TokenType(Enum):
     RPAREN = auto()
     NUMBER = auto()
     EOF = auto()
+    INT = auto()
+    FLOAT = auto()
+    PRINT = auto()
+    IF = auto()
+    ELSE = auto()
 
 @dataclass(frozen=True)
 class Token:
