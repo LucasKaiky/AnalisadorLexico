@@ -83,20 +83,18 @@ class Lexer:
         line = self.r.line
         col = self.r.col
         c = self.r.advance()
-        if self._is_identifier_start(c):
-            return self._scan_identifier(c, line, col)
-        if c.isdigit() or (c == "." and self.r.peek().isdigit()):
-            return self._scan_number(c, line, col)
-        if c in self.single_char:
-            if c == "*" and self.r.peek() == "/":
-                return Token(self.single_char[c], c, line, col)
-            return Token(self.single_char[c], c, line, col)
-        if c == "/":
-            if self.r.peek() == "*":
-                self.r.advance()
-                self._skip_block_comment()
+        if c == '#':
+            self._skip_line_comment()
+            return self.next_token()
+        if c == '/':
+            if self.r.match('*'):
+                self._skip_block_comment(line, col)
                 return self.next_token()
             return Token(TokenType.SLASH, "/", line, col)
+        if self._is_identifier_start(c):
+            return self._scan_identifier(c, line, col)
+        if c in self.single_char:
+            return Token(self.single_char[c], c, line, col)
         if c == "=":
             if self.r.match("="):
                 return Token(TokenType.EQUAL_EQUAL, "==", line, col)
@@ -113,9 +111,8 @@ class Lexer:
             if self.r.match("="):
                 return Token(TokenType.LESS_EQUAL, "<=", line, col)
             return Token(TokenType.LESS, "<", line, col)
-        if c == "#":
-            self._skip_line_comment()
-            return self.next_token()
+        if c.isdigit() or c == ".":
+            return self._scan_number(c, line, col)
         raise LexicalError(f"invalid character '{c}'", line, col)
 
     def _skip_whitespace(self):
