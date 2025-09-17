@@ -2,6 +2,7 @@ from .tokens import TokenType, Token
 from .errors import LexicalError
 from .keywords import KEYWORDS
 
+
 class Reader:
     def __init__(self, text: str):
         self.text = text
@@ -64,7 +65,6 @@ class Lexer:
             "+": TokenType.PLUS,
             "-": TokenType.MINUS,
             "*": TokenType.STAR,
-            "/": TokenType.SLASH,
             "(": TokenType.LPAREN,
             ")": TokenType.RPAREN,
         }
@@ -78,41 +78,63 @@ class Lexer:
 
     def next_token(self) -> Token:
         self._skip_whitespace()
+
         if self.r.is_at_end():
             return Token(TokenType.EOF, "", self.r.line, self.r.col)
-        line = self.r.line
-        col = self.r.col
-        c = self.r.advance()
+
+        line, col = self.r.line, self.r.col
+        c = self.r.peek()
+
         if c == '#':
+            self.r.advance()
             self._skip_line_comment()
             return self.next_token()
+
         if c == '/':
-            if self.r.match('*'):
+            if self.r.peek_next() == '*':
+                self.r.advance()
+                self.r.advance()
                 self._skip_block_comment()
                 return self.next_token()
-            return Token(TokenType.SLASH, "/", line, col)
+            else:
+                self.r.advance()
+                return Token(TokenType.SLASH, "/", line, col)
+
         if self._is_identifier_start(c):
-            return self._scan_identifier(c, line, col)
-        if c in self.single_char:
-            return Token(self.single_char[c], c, line, col)
+            return self._scan_identifier(line, col)
+
+        if c.isdigit() or (c == '.' and self.r.peek_next().isdigit()):
+            return self._scan_number(line, col)
+
         if c == "=":
+            self.r.advance()
             if self.r.match("="):
                 return Token(TokenType.EQUAL_EQUAL, "==", line, col)
             return Token(TokenType.ASSIGN, "=", line, col)
+
         if c == "!":
+            self.r.advance()
             if self.r.match("="):
                 return Token(TokenType.BANG_EQUAL, "!=", line, col)
             raise LexicalError("unexpected '!'", line, col)
+
         if c == ">":
+            self.r.advance()
             if self.r.match("="):
                 return Token(TokenType.GREATER_EQUAL, ">=", line, col)
             return Token(TokenType.GREATER, ">", line, col)
+
         if c == "<":
+            self.r.advance()
             if self.r.match("="):
                 return Token(TokenType.LESS_EQUAL, "<=", line, col)
             return Token(TokenType.LESS, "<", line, col)
-        if c.isdigit() or c == ".":
-            return self._scan_number(c, line, col)
+
+        if c in self.single_char:
+            self.r.advance()
+            return Token(self.single_char[c], c, line, col)
+
+        self.r.advance()
         raise LexicalError(f"invalid character '{c}'", line, col)
 
     def _skip_whitespace(self):
@@ -125,8 +147,8 @@ class Lexer:
                 continue
             break
 
-    def _scan_identifier(self, first: str, line: int, col: int) -> Token:
-        buf = [first]
+    def _scan_identifier(self, line: int, col: int) -> Token:
+        buf = []
         while self._is_identifier_part(self.r.peek()):
             buf.append(self.r.advance())
 
@@ -135,30 +157,36 @@ class Lexer:
             return Token(KEYWORDS[text], text, line, col)
         return Token(TokenType.IDENTIFIER, text, line, col)
 
-
     def _is_identifier_start(self, c: str) -> bool:
         return ("a" <= c <= "z") or ("A" <= c <= "Z") or c == "_"
 
     def _is_identifier_part(self, c: str) -> bool:
         return ("a" <= c <= "z") or ("A" <= c <= "Z") or c == "_" or c.isdigit()
 
-    def _scan_number(self, first: str, line: int, col: int) -> Token:
-        buf = [first]
-        has_dot = first == "."
-        while True:
-            c = self.r.peek()
-            if c.isdigit():
+    def _scan_number(self, line: int, col: int) -> Token:
+        buf = []
+
+        if self.r.peek() == '.':
+            buf.append(self.r.advance())
+            if not self.r.peek().isdigit():
+                raise LexicalError(f"invalid numeric literal '{'.'}'", line, col)
+
+        while self.r.peek().isdigit():
+            buf.append(self.r.advance())
+
+        if self.r.peek() == '.':
+            if len(buf) == 0:
+                raise LexicalError(f"invalid numeric literal starting with a dot", line, col)
+
+            buf.append(self.r.advance())
+
+            if not self.r.peek().isdigit():
+                raise LexicalError(f"invalid numeric literal ending with a dot", line, col)
+
+            while self.r.peek().isdigit():
                 buf.append(self.r.advance())
-            elif c == ".":
-                if has_dot:
-                    break
-                has_dot = True
-                buf.append(self.r.advance())
-            else:
-                break
+
         text = "".join(buf)
-        if text.endswith(".") or text == ".":
-            raise LexicalError(f"invalid numeric literal '{text}'", line, col)
         return Token(TokenType.NUMBER, text, line, col)
 
     def _skip_line_comment(self):
