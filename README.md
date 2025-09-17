@@ -10,7 +10,7 @@ Lexer implementado em Python **sem comentários em código**:
 6. Constantes numéricas com ponto decimal: válidos `123, 123.456, .456`, inválidos `1., 12., 156.`
 7. Palavras reservadas: `int, float, print, if, else`
 8. Comentários: `#` (linha única) e `/* ... */` (múltiplas linhas)
-9. Erros léxicos: caracteres inválidos `(@, `, ´, ç, ¨, etc, etc)` geram erro com linha e coluna
+9. Erros léxicos: caracteres inválidos `(@, ``,`` ´, ç, ¨, etc, etc)` geram erro com linha e coluna
 
 
 ## Organização do projeto
