@@ -1,14 +1,17 @@
 # Mini Compiler (Lexer) – Python
 
-Lexer implementado em Python **sem comentários em código**, cobrindo os requisitos até o **Ponto 5**:
+Lexer implementado em Python **sem comentários em código**:
 
 1. Identificadores: `(a-z|A-Z|_)(a-z|A-Z|_|0-9)*`
 2. Operadores matemáticos: `+ - * /`
 3. Atribuição: `=`
 4. Operadores relacionais: `> >= < <= != ==`
 5. Parênteses: `(` e `)`
+6. Constantes numéricas com ponto decimal: válidos `123, 123.456, .456`, inválidos `1., 12., 156.`
+7. Palavras reservadas: `int, float, print, if, else`
+8. Comentários: `#` (linha única) e `/* ... */` (múltiplas linhas)
+9. Erros léxicos: caracteres inválidos `(@, ´, ç, ¨, etc, etc,``)` geram erro com linha e coluna
 
-Estrutura preparada para evoluir para os Pontos 6–9 posteriormente, mas **ainda não implementados** (números com ponto decimal, palavras reservadas, comentários, mensagens de erro já existem para léxicos não suportados; os recursos 6–8 estão apenas organizados para receber código).
 
 ## Organização do projeto
 
@@ -55,9 +58,3 @@ cd src
 python -m unittest ../tests/test_lexer_basic.py -v
 ```
 
-## Observações para os Pontos 6–9 (a serem feitos depois)
-
-- **Ponto 6 (números decimais)**: já existe `TokenType.NUMBER` e ganchos (`scan_number`) para implementar.
-- **Ponto 7 (palavras reservadas)**: arquivo `keywords.py` com tabela; basta ligar a verificação em `scan_identifier`.
-- **Ponto 8 (comentários)**: reservei métodos `skip_line_comment` e `skip_block_comment`, ainda não chamados.
-- **Ponto 9 (erros com linha/coluna)**: já implementado para qualquer símbolo inválido.
