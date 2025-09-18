@@ -27,3 +27,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+#Integrantes:Lara Lopes Marques, Lucas Kaike
