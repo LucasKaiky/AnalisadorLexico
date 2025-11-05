@@ -127,17 +127,6 @@ EOF '' @ 6:12
 OK: sintaxe válida.
 ```
 
----
-
-## 🧪 Testes
-
-```bash
-cd src
-python -m unittest ../tests/test_lexer_basic.py -v
-```
-
----
-
 ## 🔧 Dicas e solução de problemas
 
 - **“file not found”** → confira o caminho e rode a partir de `src/`.  
