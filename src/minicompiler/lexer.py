@@ -93,6 +93,7 @@ class Lexer:
             "*": TokenType.STAR,  # Requisito 2c
             "(": TokenType.LPAREN,  # Requisito 5a
             ")": TokenType.RPAREN,  # Requisito 5b
+            ":": TokenType.COLON,
         }
 
     def __iter__(self):
@@ -168,6 +169,9 @@ class Lexer:
             if self.r.match("="):
                 return Token(TokenType.LESS_EQUAL, "<=", line, col)
             return Token(TokenType.LESS, "<", line, col)
+        
+        if c == '"':
+            return self._scan_string(line, col)
 
         # Requisitos 2 e 5: Tokens de um único caractere
         if c in self.single_char:
@@ -215,41 +219,61 @@ class Lexer:
 
     # Requisitos 6 e 9: Scanner de Números com Ponto Decimal
     def _scan_number(self, line: int, col: int) -> Token:
-        """
-        Reconhece constantes numéricas, incluindo decimais, e aplica as
-        restrições de formato (Requisito 6).
-        """
-        buf = []
+        seen_dot = False
+        has_digit = False
+        buf: list[str] = []
 
-        # 1. Consome dígitos da parte inteira
-        while self.r.peek().isdigit():
-            buf.append(self.r.advance())
+        while True:
+            c = self.r.peek()
 
-        # 2. Verifica o ponto decimal
-        if self.r.peek() == '.':
-
-            # Checa os casos inválidos: '1.' (parte inteira existe, mas sem decimal)
-            if not self.r.peek_next().isdigit():
-                if len(buf) > 0:
-                    # Inválido: 1., 12., 156. (termina com ponto) - Requisito 6
-                    raise LexicalError(f"invalid numeric literal ending with a dot", line, col)
-                else:
-                    # Inválido: '.' (ponto sem nada antes ou depois) - Requisito 9
-                    raise LexicalError(f"invalid numeric literal starting with a dot without a number after", line, col)
-
-            # Consome o ponto (válido se for: 1.23 ou .456)
-            buf.append(self.r.advance())
-
-            # 3. Consome dígitos da parte fracionária
-            while self.r.peek().isdigit():
+            if c.isdigit():
+                has_digit = True
                 buf.append(self.r.advance())
+                continue
 
-        text = "".join(buf)
-        if not text:
-            # Caso de erro que não foi pego no 'next_token'
-            raise LexicalError(f"invalid numeric literal", line, col)
+            if c == '.':
+                if seen_dot:
+                    if self.r.peek_next().isdigit():
+                        raise LexicalError("invalid numeric literal with multiple dots", line, col)
+                    raise LexicalError("invalid numeric literal ending with a dot", line, col)
 
-        return Token(TokenType.NUMBER, text, line, col)
+                if not self.r.peek_next().isdigit():
+                    if has_digit:
+                        raise LexicalError("invalid numeric literal ending with a dot", line, col)
+                    raise LexicalError("invalid numeric literal starting with a dot without a number after", line, col)
+
+                seen_dot = True
+                buf.append(self.r.advance())
+                continue
+
+            break
+
+        if not has_digit:
+            raise LexicalError("invalid numeric literal", line, col)
+
+        tok_type = TokenType.FLOAT_LIT if seen_dot else TokenType.INT_LIT
+        return Token(tok_type, "".join(buf), line, col)
+    
+    def _scan_string(self, line: int, col: int) -> Token:
+        # Consome a abertura "
+        self.r.advance()
+        buf = []
+        while not self.r.is_at_end():
+            c = self.r.peek()
+            if c == '"':
+                self.r.advance()  # fecha
+                return Token(TokenType.STRING, "".join(buf), line, col)
+            if c == "\\":
+                self.r.advance()
+                esc = self.r.peek()
+                mapping = {'"':'"', 'n':'\n', 'r':'\r', 't':'\t', '\\':'\\'}
+                buf.append(mapping.get(esc, esc))
+                self.r.advance()
+            else:
+                # conta nova linha corretamente
+                if not self.r.consume_newline():
+                    buf.append(self.r.advance())
+        raise LexicalError("unterminated string literal", line, col)
 
     # Requisito 8: Comentário de Linha Única
     def _skip_line_comment(self):
