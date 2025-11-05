@@ -2,13 +2,11 @@ from enum import Enum, auto
 from dataclasses import dataclass
 
 class TokenType(Enum):
-    # Identificadores e literais
     IDENTIFIER = auto()
     INT_LIT = auto()
     FLOAT_LIT = auto()
     STRING = auto()
 
-    # Operadores e símbolos
     PLUS = auto(); 
     MINUS = auto(); 
     STAR = auto(); 
@@ -25,7 +23,6 @@ class TokenType(Enum):
     COLON = auto()
     EOF = auto()
 
-    # Palavras-chave em PT-BR (gramática)
     DECLARACOES = auto(); 
     ALGORITMO = auto()
     LER = auto();
@@ -41,7 +38,6 @@ class TokenType(Enum):
     INTEIRO_TIPO = auto(); 
     REAL_TIPO = auto()
 
-    # Palavras-chave já existentes (mantidas como alias)
     PRINT = auto();
     IF = auto(); 
     ELSE = auto()
