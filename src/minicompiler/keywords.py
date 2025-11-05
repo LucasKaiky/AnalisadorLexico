@@ -1,7 +1,6 @@
 from .tokens import TokenType
 
 KEYWORDS = {
-    # Gramática (PT-BR)
     "DECLARACOES": TokenType.DECLARACOES,
     "ALGORITMO": TokenType.ALGORITMO,
     "LER": TokenType.LER,
@@ -17,7 +16,6 @@ KEYWORDS = {
     "INTEIRO": TokenType.INTEIRO_TIPO,
     "REAL": TokenType.REAL_TIPO,
 
-    # Aliases já existentes (opcional)
     "print": TokenType.PRINT,
     "if": TokenType.IF,
     "else": TokenType.ELSE,
