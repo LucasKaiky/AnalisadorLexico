@@ -8,9 +8,6 @@ from .errors import LexicalError
 from .parser import Parser
 from .errors import SyntacticError
 
-class SyntacticError(Exception):
-    pass
-
 EXIT_OK = 0
 EXIT_NOT_FOUND = 2
 EXIT_LEXICAL = 1
