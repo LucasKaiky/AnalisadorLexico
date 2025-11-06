@@ -60,7 +60,7 @@ class Reader:
         return True
 
 
-# -Analisador léxico
+# Analisador léxico
 
 class Lexer:
     """Responsável por transformar o código-fonte (string) em uma sequência de Tokens."""
